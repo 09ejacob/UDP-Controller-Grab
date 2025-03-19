@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>UDP Command Sliders</title>
+    <script>
+        // Send slider values (axis + target) to Flask
+        function sendSliderValue(axis, val) {
+            fetch('/set_target', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ axis: axis, target: val })
+            })
+                .then(response => response.text())
+                .then(data => console.log(data))
+                .catch(error => console.error(error));
+        }
+
+        // Send open/close commands to Flask
+        function sendGripperCommand(action) {
+            fetch('/set_gripper', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: action })
+            })
+                .then(response => response.text())
+                .then(data => console.log(data))
+                .catch(error => console.error(error));
+        }
+    </script>
+</head>
+
+<body>
+    <h1>UDP Command Sliders</h1>
+
+    <h3>Axis 1 (angular, e.g. 0–360):</h3>
+    <input type="range" min="0" max="360" step="1" value="0"
+        oninput="document.getElementById('valAxis1').textContent=this.value; sendSliderValue(1, this.value)">
+    <p>Value: <span id="valAxis1">0</span></p>
+
+    <h3>Axis 2 (prismatic, e.g. 0–1.5):</h3>
+    <input type="range" min="0.0" max="1.5" step="0.01" value="0.0"
+        oninput="document.getElementById('valAxis2').textContent=this.value; sendSliderValue(2, this.value)">
+    <p>Value: <span id="valAxis2">0.0</span></p>
+
+    <h3>Axis 3 (prismatic, e.g. -2.0–0.0):</h3>
+    <input type="range" min="-2.0" max="0.0" step="0.01" value="0.0"
+        oninput="document.getElementById('valAxis3').textContent=this.value; sendSliderValue(3, this.value)">
+    <p>Value: <span id="valAxis3">0.0</span></p>
+
+    <h2>Gripper Controls</h2>
+    <button onclick="sendGripperCommand('open')">Open Gripper</button>
+    <button onclick="sendGripperCommand('close')">Close Gripper</button>
+
+</body>
+
+</html>
