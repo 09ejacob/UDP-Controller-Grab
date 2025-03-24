@@ -7,16 +7,16 @@ def send_udp_command(message, host='127.0.0.1', port=9999):
         print(f"Sent command: {message}")
 
 def test():
-    send_udp_command("axis:2:0.5")
+    send_udp_command("axis:2:1.5")
 
-def defaultScenario():
+def default_scenario():
     send_udp_command("axis:1:90")
     time.sleep(3.0)
     send_udp_command("axis:2:0.5")
     time.sleep(3.0)
     send_udp_command("axis:3:-1.45")
     time.sleep(3.0)
-    send_udp_command("force_data")
+    force_sensor()
     time.sleep(1)
     send_udp_command("axis:2:0.05")
     time.sleep(3.0)
@@ -24,13 +24,17 @@ def defaultScenario():
     time.sleep(1)
     send_udp_command("axis:2:0.75")
     time.sleep(3)
-    send_udp_command("force_data")
+    force_sensor()
     time.sleep(1)
     send_udp_command("axis:1:0")
     time.sleep(3)
     send_udp_command("open_gripper")
 
+def force_sensor():
+    send_udp_command("force_data")
 
 if __name__ == '__main__':
+    while True:
+        force_sensor()
+        time.sleep(0.1)
     #test()
-    defaultScenario()
