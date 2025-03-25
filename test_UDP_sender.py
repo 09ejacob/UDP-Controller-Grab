@@ -41,8 +41,8 @@ if __name__ == '__main__':
     #     force_sensor()
     #     time.sleep(0.1)
     #test()
-    # while True:
-    #     force_sensor()
-    #     time.sleep(0.1)
+    while True:
+        force_sensor()
+        time.sleep(0.1)
     #test()
-    default_scenario()
+    #default_scenario()

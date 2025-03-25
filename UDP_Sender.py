@@ -1,5 +1,6 @@
 import socket
 import time
+import math
 
 def send_udp_command(udp_socket, message, host, port):
     udp_socket.sendto(message.encode('utf-8'), (host, port))
@@ -14,6 +15,22 @@ def send_commands_at_rate(commands, host='127.0.0.1', port=9999, frequency=200):
             time.sleep(interval)
     finally:
         udp_socket.close()
+
+
+
+def compute_axis_moves(target_location, current_axes=(0.0, 0.0, 0.0)):
+    x, y, z = target_location
+    current_axis1, current_axis2, current_axis3 = current_axes
+
+    desired_axis1 = math.degrees(math.atan2(y, x))
+    desired_axis2 = z
+    desired_axis3 = math.sqrt(x**2 + y**2)
+
+    delta_axis1 = desired_axis1 - current_axis1
+    delta_axis2 = desired_axis2 - current_axis2
+    delta_axis3 = desired_axis3 - current_axis3
+
+    return {"axis1": delta_axis1, "axis2": delta_axis2, "axis3": delta_axis3}
 
 
 # Possible commands are:
@@ -46,4 +63,9 @@ if __name__ == '__main__':
         "axis2:0.70",
         # "tp_robot:-2:-2:0"
     ]
-    send_commands_at_rate(commands, frequency=10)
+    #send_commands_at_rate(commands, frequency=10)
+
+    current_axes = (0.0, 0.0, 0.5)
+    target_location = (1.24999, -0.2, 0.44404)
+    moves = compute_axis_moves(target_location, current_axes)
+    print("Axis moves required:", moves)
