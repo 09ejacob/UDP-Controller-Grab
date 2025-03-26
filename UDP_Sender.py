@@ -26,24 +26,21 @@ def compute_axis_positions(target_location):
     
     new_axis2 = target_z
 
-    new_axis4 = abs(90 - new_axis1)
+    new_axis4 = (new_axis1 - 90)
 
     return (new_axis1, new_axis2, -1 * (new_axis3 - 0.05), new_axis4)
 
-# Possible commands are:
-# axisx:x - Moves axis x to location x
-# force_data - Makes robot controller print out force sensor data
-# close_gripper - Closes the gripper
-# open_gripper - Opens the gripper
-# tp_robot:x:y:z - Teleports the robot to given x, y, and z coordinates
 if __name__ == '__main__':
-    commands = [
-        "axis1:99.09034842937326",
-        "axis2:0.44404",
-        "axis3:-1.215889015711883",
-    ]
-    target_location = (1.24999, -0.2, 0.44404)
+    target_location = (1.55, 0.2, 0.44403)
     new_positions = compute_axis_positions(target_location)
-    print("New axis positions:", new_positions)
+    new_axis1, new_axis2, new_axis3, new_axis4 = new_positions
 
-    #send_commands_at_rate(commands, frequency=10)
+    commands = [
+        f"axis1:{new_axis1}",
+        f"axis2:{new_axis2}",
+        f"axis3:{new_axis3}",
+        f"axis4:{new_axis4}",
+    ]
+
+    print("New commands to send:", commands)
+    send_commands_at_rate(commands, frequency=2)
