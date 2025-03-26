@@ -100,12 +100,17 @@ if __name__ == '__main__':
     frequency = 200
     current_axes = (0, 0, 0, 0)
     pick_sequence1 = pick_and_stack_box((1.55, 0.2, 0.44403), (-0.35, 1.75, 0.6))
-    pick_sequence2 = pick_and_stack_box((1.24999, -0.2, 0.44403), (0, 1.75, 0.6))
-    pick_sequence3 = pick_and_stack_box((1.55, -0.2, 0.444), (0.35, 1.75, 0.6))
+    #pick_sequence2 = pick_and_stack_box((1.24999, -0.2, 0.44403), (0, 1.75, 0.6))
+    #pick_sequence3 = pick_and_stack_box((1.55, -0.2, 0.444), (0.35, 1.75, 0.6))
+    pick_sequence2 = pick_and_stack_box((1.85002, -0.79999 + 1, 0.64409), (0, 1.75, 0.6)) # Plus 1 to the y axis because we teleport the robot
+    pick_sequence3 = pick_and_stack_box((1.85001, -1.20001 + 1, 0.64407), (0.35, 1.75, 0.6)) # Plus 1 to the y axis because we teleport the robot
     
-    full_sequence = (pick_sequence1 + [{"type": "command", "command": "wait", "delay": 1.0}] 
-                     + pick_sequence2 + [{"type": "command", "command": "wait", "delay": 1.0}]
-                     + pick_sequence3 + [{"type": "command", "command": "wait", "delay": 1.0}])
+    full_sequence = (pick_sequence1 + 
+                    [{"type": "command", "command": "tp_robot:0:-1:0", "delay": 1.0}] +
+                    pick_sequence2 +
+                    [{"type": "command", "command": "wait", "delay": 1.0}]+
+                    pick_sequence3 +
+                    [{"type": "command", "command": "wait", "delay": 1.0}])
     
     all_command_sets, final_axes = process_sequence(full_sequence, current_axes, frequency)
 
