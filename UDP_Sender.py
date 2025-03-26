@@ -26,7 +26,9 @@ def compute_axis_positions(target_location):
     
     new_axis2 = target_z
 
-    return (new_axis1, new_axis2, new_axis3 - 0.05)
+    new_axis4 = abs(90 - new_axis1)
+
+    return (new_axis1, new_axis2, -1 * (new_axis3 - 0.05), new_axis4)
 
 # Possible commands are:
 # axisx:x - Moves axis x to location x
@@ -44,4 +46,4 @@ if __name__ == '__main__':
     new_positions = compute_axis_positions(target_location)
     print("New axis positions:", new_positions)
 
-    send_commands_at_rate(commands, frequency=10)
+    #send_commands_at_rate(commands, frequency=10)
