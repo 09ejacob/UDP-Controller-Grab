@@ -106,7 +106,7 @@ if __name__ == '__main__':
     pick_sequence3 = pick_and_stack_box((1.85001, -1.20001 + 1, 0.64407), (0.35, 1.75, 0.6)) # Plus 1 to the y axis because we teleport the robot
     
     full_sequence = (pick_sequence1 + 
-                    [{"type": "command", "command": "nudge_box:/World/Environment/stack1/box_1_14:0:1:0", "delay": 1.0}] +
+                    [{"type": "command", "command": "nudge_box:/World/Environment/stack1/box_1_14:0:-1:0", "delay": 1.0 / frequency}] + # Dividing by frequency to only run once
                     [{"type": "command", "command": "tp_robot:0:-1:0", "delay": 1.0}] +
                     pick_sequence2 +
                     [{"type": "command", "command": "wait", "delay": 1.0}]+
