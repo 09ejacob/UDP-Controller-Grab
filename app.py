@@ -29,7 +29,7 @@ def set_target():
     axis = data["axis"]
     target_val = data["target"]
 
-    message = f"axis:{axis}:{target_val}"
+    message = f"axis{axis}:{target_val}"
     send_udp_command(message)
     return f"Command sent: {message}"
 

@@ -8,9 +8,9 @@ def send_udp_command(message, host='127.0.0.1', port=9999):
         print(f"Sent command: {message}")
 
 def test(): 
-    send_udp_command("axis:2:1.5")
+    send_udp_command("axis2:1.5")
     #send_udp_command("axis:2:1.5")
-    send_udp_command("tp_robot:-1:-2:0")
+    #send_udp_command("tp_robot:-1:-2:0")
 
 def default_scenario(): 
     send_udp_command("axis:1:90")
@@ -43,6 +43,7 @@ if __name__ == '__main__':
     #test()
     while True:
         force_sensor()
+        #test()
         time.sleep(0.1)
     #test()
     #default_scenario()
