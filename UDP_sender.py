@@ -23,7 +23,7 @@ def compute_axis_positions(target_position):
     extension = math.hypot(target_x, target_y)
     axis2_position = target_z
     axis4_angle = axis1_angle - 90
-    axis3_extension = -1 * (extension - 0.05)
+    axis3_extension = (extension - 0.05)
     return (axis1_angle, axis2_position, axis3_extension, axis4_angle)
 
 def generate_interpolated_commands_linear(current_axes, target_axes, move_duration, frequency):
@@ -79,37 +79,37 @@ def process_sequence(sequence, current_axes, frequency):
 
 def pick_and_stack_box(box_position, stack_position):
     sequence = [
-        {"type": "command", "command": "axis1:90", "delay": 2.0},
-        {"type": "command", "command": f"axis2:{box_position[2]}", "delay": 1.0},
-        {"type": "move", "target": (box_position[0], box_position[1], box_position[2] + 0.15), "duration": 3.0},
-        {"type": "move", "target": (box_position[0], box_position[1], box_position[2] - 0.1), "duration": 2.0},
-        {"type": "command", "command": "close_gripper", "delay": 1.0},
-        {"type": "move", "target": (box_position[0], box_position[1], box_position[2] + 0.3), "duration": 2.0},
-        {"type": "command", "command": "axis3:0", "delay": 2.0},
-        {"type": "command", "command": "axis1:0", "delay": 2.0},
-        {"type": "move", "target": (stack_position[0], stack_position[1], stack_position[2] + 0.2), "duration": 3.0},
-        {"type": "move", "target": (stack_position[0], stack_position[1], stack_position[2] - 0.1), "duration": 1.0},
-        {"type": "command", "command": "open_gripper", "delay": 1.0},
-        {"type": "move", "target": (stack_position[0], stack_position[1], stack_position[2] + 0.2), "duration": 2.0},
-        {"type": "command", "command": "axis3:0", "delay": 2.0},
-        {"type": "command", "command": "axis2:0", "delay": 2.0},
+        {"type": "command", "command": "axis1:-90", "delay": 2.0}, # Turn towards the pallet
+        {"type": "command", "command": f"axis2:{box_position[2]}", "delay": 1.0}, # Raise axis2
+        {"type": "move", "target": (box_position[0], box_position[1], box_position[2] + 0.15), "duration": 3.0}, # Move axes to the box position
+        {"type": "move", "target": (box_position[0], box_position[1], box_position[2] - 0.1), "duration": 2.0}, # Lower axis2
+        {"type": "command", "command": "close_gripper", "delay": 1.0}, # Close gripper
+        {"type": "move", "target": (box_position[0], box_position[1], box_position[2] + 0.3), "duration": 2.0}, # Raise axis2
+        {"type": "command", "command": "axis3:0", "delay": 2.0}, # Retract axis3
+        {"type": "command", "command": "axis1:0", "delay": 2.0}, # Straighten axis1
+        {"type": "command", "command": "axis2:0.5", "delay": 2.0}, # Set axis2 to 0.5
+        {"type": "command", "command": f"axis2:{stack_position[2] + 0.3}", "delay": 2.0}, # Raise axis2
+        {"type": "move", "target": (stack_position[0], stack_position[1], stack_position[2] + 0.3), "duration": 3.0}, # Move towards stack position
+        {"type": "move", "target": (stack_position[0], stack_position[1], stack_position[2] - 0.2), "duration": 1.0}, # Lower axis2
+        {"type": "command", "command": "open_gripper", "delay": 1.0}, # Open gripper
+        {"type": "move", "target": (stack_position[0], stack_position[1], stack_position[2] + 0.2), "duration": 2.0}, # Raise axis2
+        {"type": "command", "command": "axis3:0", "delay": 2.0}, # Retract axis3
+        {"type": "command", "command": "axis2:0", "delay": 2.0}, # Set axis2 to 0
     ]
     return sequence
 
 if __name__ == '__main__':
     frequency = 200
     current_axes = (0, 0, 0, 0)
-    pick_sequence1 = pick_and_stack_box((1.55, 0.2, 0.44403), (-0.35, 1.75, 0.6))
-    #pick_sequence2 = pick_and_stack_box((1.24999, -0.2, 0.44403), (0, 1.75, 0.6))
-    #pick_sequence3 = pick_and_stack_box((1.55, -0.2, 0.444), (0.35, 1.75, 0.6))
-    pick_sequence2 = pick_and_stack_box((1.85002, -0.79999 + 1, 0.64409), (0, 1.75, 0.6)) # Plus 1 to the y axis because we teleport the robot
-    pick_sequence3 = pick_and_stack_box((1.85001, -1.20001 + 1, 0.64407), (0.35, 1.75, 0.6)) # Plus 1 to the y axis because we teleport the robot
+    pick_sequence1 = pick_and_stack_box((-1.55, -0.2, 0.64403), (-0.35, 1.75, 0.6))
+    pick_sequence2 = pick_and_stack_box((-1.25, 0.19999, 2.64403), (0, 1.75, 0.6))
+    pick_sequence3 = pick_and_stack_box((-1.55002, -1.1 + 1, 0.64407), (0.35, 1.75, 0.6)) # Plus 1 to the y axis because we teleport the robot
     
     full_sequence = (pick_sequence1 + 
-                    [{"type": "command", "command": "nudge_box:/World/Environment/stack1/box_1_14:0:-1:0", "delay": 1.0 / frequency}] + # Dividing by frequency to only run once
+                     pick_sequence2 +
+                    [{"type": "command", "command": "nudge_box:/World/Environment/stack1/box_1_19:0:-1:0", "delay": 1.0 / frequency}] + # Dividing by frequency to only run once
+                    [{"type": "command", "command": "nudge_box:/World/Environment/stack4/box_4_30:0:-1:0", "delay": 1.0 / frequency}] +
                     [{"type": "command", "command": "tp_robot:0:-1:0", "delay": 1.0}] +
-                    pick_sequence2 +
-                    [{"type": "command", "command": "wait", "delay": 1.0}]+
                     pick_sequence3 +
                     [{"type": "command", "command": "wait", "delay": 1.0}])
     
