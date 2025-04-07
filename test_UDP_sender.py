@@ -8,10 +8,10 @@ def send_udp_command(message, host='127.0.0.1', port=9999):
         print(f"Sent command: {message}")
 
 def test(): 
-    send_udp_command("axis1:90")
+    #send_udp_command("axis1:90")
     #send_udp_command("close_gripper")
     #send_udp_command("open_gripper")
-    #send_udp_command("capture")
+    send_udp_command("capture")
     #send_udp_command("tp_robot:-1:-2:0")
 
 def default_scenario(): 
