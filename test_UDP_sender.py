@@ -1,23 +1,26 @@
-import socket 
+import socket
 import time
 
-def send_udp_command(message, host='127.0.0.1', port=9999):
+
+def send_udp_command(message, host="127.0.0.1", port=9999):
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
-        udp_socket.sendto(message.encode('utf-8'), (host, port))
- 
+        udp_socket.sendto(message.encode("utf-8"), (host, port))
+
         print(f"Sent command: {message}")
 
-def test(): 
-    #send_udp_command("axis1:90")
-    #send_udp_command("close_gripper")
-    #send_udp_command("open_gripper")
+
+def test():
+    # send_udp_command("axis1:90")
+    # send_udp_command("close_gripper")
+    # send_udp_command("open_gripper")
     send_udp_command("capture")
-    #send_udp_command("tp_robot:-1:-2:0")
+    # send_udp_command("tp_robot:-1:-2:0")
     # send_udp_command("start_overview_camera")
     # time.sleep(2)
     # send_udp_command("stop_overview_camera")
 
-def default_scenario(): 
+
+def default_scenario():
     send_udp_command("axis:1:90")
     time.sleep(3.0)
     send_udp_command("axis:2:0.5")
@@ -38,10 +41,12 @@ def default_scenario():
     time.sleep(3)
     send_udp_command("open_gripper")
 
-def force_sensor(): 
+
+def force_sensor():
     send_udp_command("force_data")
 
-if __name__ == '__main__': 
+
+if __name__ == "__main__":
     # while True:
     #     force_sensor()
     #     time.sleep(0.1)
@@ -50,5 +55,5 @@ if __name__ == '__main__':
     #     force_sensor()
     #     #test()
     #     time.sleep(0.1)
-    #test()
-    #default_scenario()
+    # test()
+    # default_scenario()

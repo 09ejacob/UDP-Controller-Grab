@@ -2,11 +2,13 @@ import socket
 import time
 import math
 
+
 def send_udp_command(sock, message, host, port):
-    sock.sendto(message.encode('utf-8'), (host, port))
+    sock.sendto(message.encode("utf-8"), (host, port))
     print(f"Sent command: {message}")
 
-def send_command_sets_at_rate(command_sets, host='127.0.0.1', port=9999, frequency=200):
+
+def send_command_sets_at_rate(command_sets, host="127.0.0.1", port=9999, frequency=200):
     interval = 1.0 / frequency
     udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
@@ -17,16 +19,20 @@ def send_command_sets_at_rate(command_sets, host='127.0.0.1', port=9999, frequen
     finally:
         udp_socket.close()
 
+
 def compute_axis_positions(target_position):
     target_x, target_y, target_z = target_position
     axis1_angle = math.degrees(math.atan2(target_x, target_y))
     extension = math.hypot(target_x, target_y)
     axis2_position = target_z
     axis4_angle = axis1_angle - 90
-    axis3_extension = (extension - 0.05)
+    axis3_extension = extension - 0.05
     return (axis1_angle, axis2_position, axis3_extension, axis4_angle)
 
-def generate_interpolated_commands_linear(current_axes, target_axes, move_duration, frequency):
+
+def generate_interpolated_commands_linear(
+    current_axes, target_axes, move_duration, frequency
+):
     num_steps = int(move_duration * frequency)
     command_sets = []
     for step in range(num_steps):
@@ -39,10 +45,11 @@ def generate_interpolated_commands_linear(current_axes, target_axes, move_durati
             f"axis1:{interpolated_axes[0]}",
             f"axis2:{interpolated_axes[1]}",
             f"axis3:{interpolated_axes[2]}",
-            f"axis4:{interpolated_axes[3]}"
+            f"axis4:{interpolated_axes[3]}",
         ]
         command_sets.append(command_set)
     return command_sets
+
 
 def process_sequence(sequence, current_axes, frequency):
     all_command_sets = []
@@ -51,7 +58,9 @@ def process_sequence(sequence, current_axes, frequency):
             target_position = step["target"]
             move_duration = step.get("duration", 5.0)
             target_axes = compute_axis_positions(target_position)
-            move_commands = generate_interpolated_commands_linear(current_axes, target_axes, move_duration, frequency)
+            move_commands = generate_interpolated_commands_linear(
+                current_axes, target_axes, move_duration, frequency
+            )
             all_command_sets.extend(move_commands)
             current_axes = target_axes
         elif step["type"] == "command":
@@ -66,7 +75,9 @@ def process_sequence(sequence, current_axes, frequency):
                 new_target_axes[axis_index] = new_value
                 new_target_axes = tuple(new_target_axes)
                 move_duration = delay_duration
-                move_commands = generate_interpolated_commands_linear(current_axes, new_target_axes, move_duration, frequency)
+                move_commands = generate_interpolated_commands_linear(
+                    current_axes, new_target_axes, move_duration, frequency
+                )
                 all_command_sets.extend(move_commands)
                 current_axes = new_target_axes
             else:
@@ -77,61 +88,157 @@ def process_sequence(sequence, current_axes, frequency):
             print("Unknown step type:", step["type"])
     return all_command_sets, current_axes
 
+
 def pick_and_stack_box(box_position, stack_position, delay):
     sequence = [
-        {"type": "command", "command": "axis1:-90", "delay": 2.0 / delay}, # Turn towards the pallet
-        {"type": "command", "command": f"axis2:{box_position[2]}", "delay": 1.0}, # Raise axis2
-        {"type": "move", "target": (box_position[0], box_position[1], box_position[2] + 0.15), "duration": 3.0 / delay}, # Move axes to the box position
-        {"type": "move", "target": (box_position[0], box_position[1], box_position[2] - 0.1), "duration": 2.0 / delay}, # Lower axis2
-        {"type": "command", "command": "close_gripper", "delay": 1.0 / delay}, # Close gripper
-        {"type": "command", "command": "capture", "delay": 1 / frequency}, # Take picture
-        {"type": "move", "target": (box_position[0], box_position[1], box_position[2] + 0.3), "duration": 2.0 / delay}, # Raise axis2
-        {"type": "command", "command": "axis3:0", "delay": 2.0 / delay}, # Retract axis3
-        {"type": "command", "command": "axis1:0", "delay": 2.0 / delay}, # Straighten axis1
-        {"type": "command", "command": "axis2:0.5", "delay": 2.0 / delay}, # Set axis2 to 0.5
-        {"type": "command", "command": f"axis2:{stack_position[2] + 0.3}", "delay": 2.0 / delay}, # Raise axis2
-        {"type": "move", "target": (stack_position[0], stack_position[1], stack_position[2] + 0.3), "duration": 3.0 / delay}, # Move towards stack position
-        {"type": "move", "target": (stack_position[0], stack_position[1], stack_position[2] - 0.2), "duration": 1.0 / delay}, # Lower axis2
-        {"type": "command", "command": "open_gripper", "delay": 1.0 / delay}, # Open gripper
-        {"type": "move", "target": (stack_position[0], stack_position[1], stack_position[2] + 0.2), "duration": 2.0 / delay}, # Raise axis2
-        {"type": "command", "command": "capture", "delay": 1 / frequency}, # Take picture
-        {"type": "command", "command": "axis3:0", "delay": 2.0 / delay}, # Retract axis3
-        {"type": "command", "command": "axis2:0", "delay": 2.0 / delay}, # Set axis2 to 0
+        {
+            "type": "command",
+            "command": "axis1:-90",
+            "delay": 2.0 / delay,
+        },  # Turn towards the pallet
+        {
+            "type": "command",
+            "command": f"axis2:{box_position[2]}",
+            "delay": 1.0,
+        },  # Raise axis2
+        {
+            "type": "move",
+            "target": (box_position[0], box_position[1], box_position[2] + 0.15),
+            "duration": 3.0 / delay,
+        },  # Move axes to the box position
+        {
+            "type": "move",
+            "target": (box_position[0], box_position[1], box_position[2] - 0.1),
+            "duration": 2.0 / delay,
+        },  # Lower axis2
+        {
+            "type": "command",
+            "command": "close_gripper",
+            "delay": 1.0 / delay,
+        },  # Close gripper
+        {
+            "type": "command",
+            "command": "capture",
+            "delay": 1 / frequency,
+        },  # Take picture
+        {
+            "type": "move",
+            "target": (box_position[0], box_position[1], box_position[2] + 0.3),
+            "duration": 2.0 / delay,
+        },  # Raise axis2
+        {
+            "type": "command",
+            "command": "axis3:0",
+            "delay": 2.0 / delay,
+        },  # Retract axis3
+        {
+            "type": "command",
+            "command": "axis1:0",
+            "delay": 2.0 / delay,
+        },  # Straighten axis1
+        {
+            "type": "command",
+            "command": "axis2:0.5",
+            "delay": 2.0 / delay,
+        },  # Set axis2 to 0.5
+        {
+            "type": "command",
+            "command": f"axis2:{stack_position[2] + 0.3}",
+            "delay": 2.0 / delay,
+        },  # Raise axis2
+        {
+            "type": "move",
+            "target": (stack_position[0], stack_position[1], stack_position[2] + 0.3),
+            "duration": 3.0 / delay,
+        },  # Move towards stack position
+        {
+            "type": "move",
+            "target": (stack_position[0], stack_position[1], stack_position[2] - 0.2),
+            "duration": 1.0 / delay,
+        },  # Lower axis2
+        {
+            "type": "command",
+            "command": "open_gripper",
+            "delay": 1.0 / delay,
+        },  # Open gripper
+        {
+            "type": "move",
+            "target": (stack_position[0], stack_position[1], stack_position[2] + 0.2),
+            "duration": 2.0 / delay,
+        },  # Raise axis2
+        {
+            "type": "command",
+            "command": "capture",
+            "delay": 1 / frequency,
+        },  # Take picture
+        {
+            "type": "command",
+            "command": "axis3:0",
+            "delay": 2.0 / delay,
+        },  # Retract axis3
+        {
+            "type": "command",
+            "command": "axis2:0",
+            "delay": 2.0 / delay,
+        },  # Set axis2 to 0
     ]
     return sequence
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     frequency = 200
     delay = 1
 
     current_axes = (0, 0, 0, 0)
-    pick_sequence1 = pick_and_stack_box((-1.55, -0.2, 0.64403), (-0.35, 1.75, 0.6), delay)
-    pick_sequence2 = pick_and_stack_box((-1.25, 0.19999, 2.64403), (0, 1.75, 0.6), delay)
-    pick_sequence3 = pick_and_stack_box((-1.55002, -1.1 + 1, 0.64407), (0.35, 1.75, 0.6), delay) # Plus 1 to the y axis because we teleport the robot
-    
-    full_sequence = (pick_sequence1 + 
-                     pick_sequence2 +
-                    [{"type": "command", "command": "nudge_box:/World/Environment/stack1/box_1_19:0:-1:0", "delay": 1.0 / frequency}] + # Dividing by frequency to only run once
-                    [{"type": "command", "command": "nudge_box:/World/Environment/stack4/box_4_30:0:-1:0", "delay": 1.0 / frequency}] +
-                    [{"type": "command", "command": "tp_robot:0:-1:0", "delay": 1.0}] +
-                    pick_sequence3 +
-                    [{"type": "command", "command": "wait", "delay": 1.0}])
-    
-    all_command_sets, final_axes = process_sequence(full_sequence, current_axes, frequency)
+    pick_sequence1 = pick_and_stack_box(
+        (-1.55, -0.2, 0.64403), (-0.35, 1.75, 0.6), delay
+    )
+    pick_sequence2 = pick_and_stack_box(
+        (-1.25, 0.19999, 2.64403), (0, 1.75, 0.6), delay
+    )
+    pick_sequence3 = pick_and_stack_box(
+        (-1.55002, -1.1 + 1, 0.64407), (0.35, 1.75, 0.6), delay
+    )  # Plus 1 to the y axis because we teleport the robot
+
+    full_sequence = (
+        pick_sequence1
+        + pick_sequence2
+        + [
+            {
+                "type": "command",
+                "command": "nudge_box:/World/Environment/stack1/box_1_19:0:-1:0",
+                "delay": 1.0 / frequency,
+            }
+        ]  # Dividing by frequency to only run once
+        + [
+            {
+                "type": "command",
+                "command": "nudge_box:/World/Environment/stack4/box_4_30:0:-1:0",
+                "delay": 1.0 / frequency,
+            }
+        ]
+        + [{"type": "command", "command": "tp_robot:0:-1:0", "delay": 1.0}]
+        + pick_sequence3
+        + [{"type": "command", "command": "wait", "delay": 1.0}]
+    )
+
+    all_command_sets, final_axes = process_sequence(
+        full_sequence, current_axes, frequency
+    )
 
     start_time = time.time()
-    
+
     udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    send_udp_command(udp_socket, "start_overview_camera", '127.0.0.1', 9999)
+    send_udp_command(udp_socket, "start_overview_camera", "127.0.0.1", 9999)
     udp_socket.close()
 
     send_command_sets_at_rate(all_command_sets, frequency=frequency)
-    
+
     end_time = time.time()
     execution_time = end_time - start_time
 
     udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    send_udp_command(udp_socket, "stop_overview_camera", '127.0.0.1', 9999)
+    send_udp_command(udp_socket, "stop_overview_camera", "127.0.0.1", 9999)
     udp_socket.close()
 
     print(f"Total execution time: {execution_time:.2f} seconds")
