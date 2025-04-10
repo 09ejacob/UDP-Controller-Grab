@@ -13,6 +13,9 @@ def test():
     #send_udp_command("open_gripper")
     send_udp_command("capture")
     #send_udp_command("tp_robot:-1:-2:0")
+    # send_udp_command("start_overview_camera")
+    # time.sleep(2)
+    # send_udp_command("stop_overview_camera")
 
 def default_scenario(): 
     send_udp_command("axis:1:90")

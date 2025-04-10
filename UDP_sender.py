@@ -102,7 +102,7 @@ def pick_and_stack_box(box_position, stack_position, delay):
 
 if __name__ == '__main__':
     frequency = 200
-    delay = 3
+    delay = 1
 
     current_axes = (0, 0, 0, 0)
     pick_sequence1 = pick_and_stack_box((-1.55, -0.2, 0.64403), (-0.35, 1.75, 0.6), delay)
@@ -121,10 +121,18 @@ if __name__ == '__main__':
 
     start_time = time.time()
     
+    udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    send_udp_command(udp_socket, "start_overview_camera", '127.0.0.1', 9999)
+    udp_socket.close()
+
     send_command_sets_at_rate(all_command_sets, frequency=frequency)
     
     end_time = time.time()
     execution_time = end_time - start_time
+
+    udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    send_udp_command(udp_socket, "stop_overview_camera", '127.0.0.1', 9999)
+    udp_socket.close()
 
     print(f"Total execution time: {execution_time:.2f} seconds")
     print("Program done.")
