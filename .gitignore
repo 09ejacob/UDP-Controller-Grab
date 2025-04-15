@@ -1,1 +1,4 @@
 .vscode/
+
+# Ignore received images
+received_images/
