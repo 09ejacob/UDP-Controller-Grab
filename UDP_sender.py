@@ -118,7 +118,7 @@ def pick_and_stack_box(box_position, stack_position, delay):
         },  # Close gripper
         {
             "type": "command",
-            "command": "capture",
+            "command": "capture:baseCamera:boxCamera1:boxCamera2",
             "delay": 1 / frequency,
         },  # Take picture
         {
@@ -168,7 +168,7 @@ def pick_and_stack_box(box_position, stack_position, delay):
         },  # Raise axis2
         {
             "type": "command",
-            "command": "capture",
+            "command": "capture:baseCamera:boxCamera1:boxCamera2",
             "delay": 1 / frequency,
         },  # Take picture
         {
