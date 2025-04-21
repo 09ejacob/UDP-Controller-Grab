@@ -118,7 +118,11 @@ def pick_and_stack_box(box_position, stack_position, delay):
         },  # Close gripper
         {
             "type": "command",
+<<<<<<< HEAD
             "command": "capture:baseCamera:boxCamera1:boxCamera2",
+=======
+            "command": "capture",
+>>>>>>> 454ba8a (Some changes to UDP sender and formatting. Changed index file for max and min axis limit. Smaller changes to test udp sender.)
             "delay": 1 / frequency,
         },  # Take picture
         {
@@ -168,7 +172,11 @@ def pick_and_stack_box(box_position, stack_position, delay):
         },  # Raise axis2
         {
             "type": "command",
+<<<<<<< HEAD
             "command": "capture:baseCamera:boxCamera1:boxCamera2",
+=======
+            "command": "capture",
+>>>>>>> 454ba8a (Some changes to UDP sender and formatting. Changed index file for max and min axis limit. Smaller changes to test udp sender.)
             "delay": 1 / frequency,
         },  # Take picture
         {

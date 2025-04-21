@@ -10,14 +10,24 @@ def send_udp_command(message, host="127.0.0.1", port=9999):
 
 
 def test():
+<<<<<<< HEAD
     # send_udp_command("axis1:90")
     # send_udp_command("close_gripper")
     # send_udp_command("open_gripper")
     send_udp_command("capture")
     # send_udp_command("tp_robot:-1:-2:0")
+=======
+    #send_udp_command("axis2:1")
+    # send_udp_command("close_gripper")
+    #send_udp_command("open_gripper")
+    #send_udp_command("capture:cam1")
+    #send_udp_command("tp_robot:1:-2:0")
+>>>>>>> 454ba8a (Some changes to UDP sender and formatting. Changed index file for max and min axis limit. Smaller changes to test udp sender.)
     # send_udp_command("start_overview_camera")
     # time.sleep(2)
     # send_udp_command("stop_overview_camera")
+    send_udp_command("reload:Grab.usd")
+    #send_udp_command("reload")
 
 
 def default_scenario():
@@ -52,8 +62,13 @@ if __name__ == "__main__":
     #     time.sleep(0.1)
     test()
     # while True:
-    #     force_sensor()
-    #     #test()
+    #     # force_sensor()
+    #     test()
     #     time.sleep(0.1)
     # test()
     # default_scenario()
+<<<<<<< HEAD
+=======
+    # time.sleep(0.5)
+    # send_udp_command("capture")
+>>>>>>> 454ba8a (Some changes to UDP sender and formatting. Changed index file for max and min axis limit. Smaller changes to test udp sender.)
