@@ -185,31 +185,155 @@ def pick_and_stack_box(box_position, stack_position, delay):
     return sequence
 
 
+def pick_and_stack_bottles(bottles_position, stack_position, delay):
+    sequence = [
+        {
+            "type": "command",
+            "command": "axis1:-90",
+            "delay": 2.0 / delay,
+        },  # Turn towards the pallet
+        {
+            "type": "command",
+            "command": f"axis2:{bottles_position[2]}",
+            "delay": 1.0,
+        },  # Raise axis2
+        {
+            "type": "move",
+            "target": (
+                bottles_position[0],
+                bottles_position[1],
+                bottles_position[2] + 0.3,
+            ),
+            "duration": 3.0 / delay,
+        },  # Move axes to the box position
+        {
+            "type": "command",
+            "command": "open_gripper",
+            "delay": 1 / frequency,
+        },  # Open bottlegripper
+        {
+            "type": "move",
+            "target": (
+                bottles_position[0],
+                bottles_position[1],
+                bottles_position[2] + 0.15,
+            ),
+            "duration": 2.0 / delay,
+        },  # Lower axis2
+        {
+            "type": "command",
+            "command": "close_gripper",
+            "delay": 1.0 / delay,
+        },  # Close gripper
+        {
+            "type": "command",
+            "command": "capture:baseCamera:boxCamera1:boxCamera2",
+            "delay": 1 / frequency,
+        },  # Take picture
+        {
+            "type": "move",
+            "target": (
+                bottles_position[0],
+                bottles_position[1],
+                bottles_position[2] + 0.35,
+            ),
+            "duration": 2.0 / delay,
+        },  # Raise axis2
+        {
+            "type": "command",
+            "command": "axis3:0",
+            "delay": 2.0 / delay,
+        },  # Retract axis3
+        {
+            "type": "command",
+            "command": "axis1:0",
+            "delay": 2.0 / delay,
+        },  # Straighten axis1
+        {
+            "type": "command",
+            "command": "axis2:0.5",
+            "delay": 2.0 / delay,
+        },  # Set axis2 to 0.5
+        {
+            "type": "command",
+            "command": f"axis2:{stack_position[2] + 0.3}",
+            "delay": 2.0 / delay,
+        },  # Raise axis2
+        {
+            "type": "move",
+            "target": (stack_position[0], stack_position[1], stack_position[2] + 0.3),
+            "duration": 3.0 / delay,
+        },  # Move towards stack position
+        {
+            "type": "move",
+            "target": (stack_position[0], stack_position[1], stack_position[2] + 0.1375),
+            "duration": 1.0 / delay,
+        },  # Lower axis2
+        {
+            "type": "command",
+            "command": "open_gripper",
+            "delay": 1.0 / delay,
+        },  # Open gripper
+        {
+            "type": "move",
+            "target": (stack_position[0], stack_position[1], stack_position[2] + 0.3),
+            "duration": 2.0 / delay,
+        },  # Raise axis2
+        {
+            "type": "command",
+            "command": "capture:baseCamera:boxCamera1:boxCamera2",
+            "delay": 1 / frequency,
+        },  # Take picture
+        {
+            "type": "command",
+            "command": "axis3:0",
+            "delay": 2.0 / delay,
+        },  # Retract axis3
+        {
+            "type": "command",
+            "command": "axis2:0.1",
+            "delay": 2.0 / delay,
+        },  # Set axis2 to 0
+    ]
+    return sequence
+
+
 if __name__ == "__main__":
     frequency = 200
     delay = 1
 
     current_axes = (0, 0, 0, 0)
-    pick_sequence1 = pick_and_stack_box(
+    pick_sequence_box_1 = pick_and_stack_box(
         (-1.55, -0.2, 0.64403), (-0.35, 1.75, 0.6), delay
     )
-    pick_sequence2 = pick_and_stack_box(
+    pick_sequence_box_2 = pick_and_stack_box(
         (-1.25, 0.19999, 2.64403), (0, 1.75, 0.6), delay
     )
-    pick_sequence3 = pick_and_stack_box(
+    pick_sequence_box_3 = pick_and_stack_box(
         (-1.55002, -1.1 + 1, 0.64407), (0.35, 1.75, 0.6), delay
     )  # Plus 1 to the y axis because we teleport the robot
 
-    full_sequence = (
-        pick_sequence1
-        + pick_sequence2
+
+    pick_sequence_bottles_1 = pick_and_stack_bottles(
+        (-0.95, 1.0 - 1, 0.145), (-0.35, 2.85 - 1, 0.5), delay
+    )
+    pick_sequence_bottles_2 = pick_and_stack_bottles(
+        (-0.95, 0.8 - 1, 1.945), (0, 2.85 - 1, 0.5), delay
+    )
+    pick_sequence_bottles_3 = pick_and_stack_bottles(
+        (-0.95, -1.2 + 1, 1.945), (0.35, 0.85 + 1, 0.5), delay
+    )
+
+    full_sequence_box = (
+        pick_sequence_box_1
+        + pick_sequence_box_2
         + [
             {
                 "type": "command",
                 "command": "nudge_box:/World/Environment/stack1/box_1_19:0:-1:0",
                 "delay": 1.0 / frequency,
             }
-        ]  # Dividing by frequency to only run once
+        ]
         + [
             {
                 "type": "command",
@@ -218,12 +342,35 @@ if __name__ == "__main__":
             }
         ]
         + [{"type": "command", "command": "tp_robot:0:-1:0", "delay": 1.0}]
-        + pick_sequence3
+        + pick_sequence_box_3
+        + [{"type": "command", "command": "wait", "delay": 1.0}]
+    )
+
+    full_sequence_bottles = (
+        [{"type": "command", "command": "tp_robot:0:1:0", "delay": 1.0}]
+        + pick_sequence_bottles_1
+        + pick_sequence_bottles_2
+        + [
+            {
+                "type": "command",
+                "command": "nudge_box:/World/Environment/stack3/stack3/box_3_14:0:-2:0",
+                "delay": 1.0 / frequency,
+            }
+        ]
+        + [
+            {
+                "type": "command",
+                "command": "nudge_box:/World/Environment/stack6/stack6/box_6_15:0:-2:0",
+                "delay": 1.0 / frequency,
+            }
+        ]
+        + [{"type": "command", "command": "tp_robot:0:-1:0", "delay": 1.0}]
+        + pick_sequence_bottles_3
         + [{"type": "command", "command": "wait", "delay": 1.0}]
     )
 
     all_command_sets, final_axes = process_sequence(
-        full_sequence, current_axes, frequency
+        full_sequence_bottles, current_axes, frequency
     )
 
     start_time = time.time()
