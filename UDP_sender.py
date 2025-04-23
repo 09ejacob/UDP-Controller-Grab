@@ -58,6 +58,15 @@ def process_sequence(sequence, current_axes, frequency):
             target_position = step["target"]
             move_duration = step.get("duration", 5.0)
             target_axes = compute_axis_positions(target_position)
+
+            if "rotation" in step:
+                target_axes = (
+                    target_axes[0],
+                    target_axes[1],
+                    target_axes[2],
+                    target_axes[3] + step["rotation"],
+                )
+
             move_commands = generate_interpolated_commands_linear(
                 current_axes, target_axes, move_duration, frequency
             )
@@ -88,8 +97,12 @@ def process_sequence(sequence, current_axes, frequency):
             print("Unknown step type:", step["type"])
     return all_command_sets, current_axes
 
+def add_safety_margin(original_number, positive=True):
+    margin = 0.025 if positive else -0.025
 
-def pick_and_stack_box(box_position, stack_position, delay):
+    return original_number + margin
+
+def pick_and_stack_box(box_position, stack_position, stack_rotation, safety_x, safety_y, delay):
     sequence = [
         {
             "type": "command",
@@ -108,7 +121,7 @@ def pick_and_stack_box(box_position, stack_position, delay):
         },  # Move axes to the box position
         {
             "type": "move",
-            "target": (box_position[0], box_position[1], box_position[2] - 0.1),
+            "target": (box_position[0], box_position[1], box_position[2] - 0.15),
             "duration": 2.0 / delay,
         },  # Lower axis2
         {
@@ -148,13 +161,15 @@ def pick_and_stack_box(box_position, stack_position, delay):
         },  # Raise axis2
         {
             "type": "move",
-            "target": (stack_position[0], stack_position[1], stack_position[2] + 0.3),
-            "duration": 3.0 / delay,
+            "target": (add_safety_margin(stack_position[0], safety_x), add_safety_margin(stack_position[1], safety_y), stack_position[2] + 0.3),
+            "duration": 4.0 / delay,
+            "rotation": stack_rotation,
         },  # Move towards stack position
         {
             "type": "move",
             "target": (stack_position[0], stack_position[1], stack_position[2] - 0.2),
             "duration": 1.0 / delay,
+            "rotation": stack_rotation,
         },  # Lower axis2
         {
             "type": "command",
@@ -162,15 +177,16 @@ def pick_and_stack_box(box_position, stack_position, delay):
             "delay": 1.0 / delay,
         },  # Open gripper
         {
-            "type": "move",
-            "target": (stack_position[0], stack_position[1], stack_position[2] + 0.2),
-            "duration": 2.0 / delay,
-        },  # Raise axis2
-        {
             "type": "command",
             "command": "capture:baseCamera:boxCamera1:boxCamera2",
             "delay": 1 / frequency,
         },  # Take picture
+        {
+            "type": "move",
+            "target": (stack_position[0], stack_position[1], stack_position[2] + 0.2),
+            "duration": 2.0 / delay,
+            "rotation": stack_rotation,
+        },  # Raise axis2
         {
             "type": "command",
             "command": "axis3:0",
@@ -185,7 +201,7 @@ def pick_and_stack_box(box_position, stack_position, delay):
     return sequence
 
 
-def pick_and_stack_bottles(bottles_position, stack_position, delay):
+def pick_and_stack_bottle(bottles_position, stack_position, stack_rotation, delay):
     sequence = [
         {
             "type": "command",
@@ -235,7 +251,7 @@ def pick_and_stack_bottles(bottles_position, stack_position, delay):
             "target": (
                 bottles_position[0],
                 bottles_position[1],
-                bottles_position[2] + 0.35,
+                bottles_position[2] + 0.45,
             ),
             "duration": 2.0 / delay,
         },  # Raise axis2
@@ -263,11 +279,13 @@ def pick_and_stack_bottles(bottles_position, stack_position, delay):
             "type": "move",
             "target": (stack_position[0], stack_position[1], stack_position[2] + 0.3),
             "duration": 3.0 / delay,
+            "rotation": stack_rotation,
         },  # Move towards stack position
         {
             "type": "move",
             "target": (stack_position[0], stack_position[1], stack_position[2] + 0.1375),
             "duration": 1.0 / delay,
+            "rotation": stack_rotation,
         },  # Lower axis2
         {
             "type": "command",
@@ -275,15 +293,16 @@ def pick_and_stack_bottles(bottles_position, stack_position, delay):
             "delay": 1.0 / delay,
         },  # Open gripper
         {
-            "type": "move",
-            "target": (stack_position[0], stack_position[1], stack_position[2] + 0.3),
-            "duration": 2.0 / delay,
-        },  # Raise axis2
-        {
             "type": "command",
             "command": "capture:baseCamera:boxCamera1:boxCamera2",
             "delay": 1 / frequency,
         },  # Take picture
+        {
+            "type": "move",
+            "target": (stack_position[0], stack_position[1], stack_position[2] + 0.3),
+            "duration": 2.0 / delay,
+            "rotation": stack_rotation,
+        },  # Raise axis2
         {
             "type": "command",
             "command": "axis3:0",
@@ -303,30 +322,107 @@ if __name__ == "__main__":
     delay = 1
 
     current_axes = (0, 0, 0, 0)
-    pick_sequence_box_1 = pick_and_stack_box(
-        (-1.55, -0.2, 0.64403), (-0.35, 1.75, 0.6), delay
+    
+    pick_sequence_box1_1 = pick_and_stack_box(
+        (-1.55, -0.2, 0.644), (-0.2, 1.625, 0.744), 90, False, False, delay
     )
-    pick_sequence_box_2 = pick_and_stack_box(
-        (-1.25, 0.19999, 2.64403), (0, 1.75, 0.6), delay
+    pick_sequence_box1_2 = pick_and_stack_box(
+        (-1.25, 0.2, 2.644), (0.2, 1.625, 0.744), 90, True, False, delay
     )
-    pick_sequence_box_3 = pick_and_stack_box(
-        (-1.55002, -1.1 + 1, 0.64407), (0.35, 1.75, 0.6), delay
+    pick_sequence_box1_3 = pick_and_stack_box(
+        (-1.55, -1.1 + 1, 0.644), (0.2, 0.325 + 1, 0.744), 90, True, False, delay
     )  # Plus 1 to the y axis because we teleport the robot
 
 
-    pick_sequence_bottles_1 = pick_and_stack_bottles(
-        (-0.95, 1.0 - 1, 0.145), (-0.35, 2.85 - 1, 0.5), delay
+    # Stack 1
+    pick_sequence_box2_1 = pick_and_stack_box(
+        (-1.55, -0.2, 0.644), (-0.2, 1.625, 0.744), 90, False, False, delay
     )
-    pick_sequence_bottles_2 = pick_and_stack_bottles(
-        (-0.95, 0.8 - 1, 1.945), (0, 2.85 - 1, 0.5), delay
+    pick_sequence_box2_2 = pick_and_stack_box(
+        (-1.85, 0.2, 0.644), (0.2, 1.625, 0.744), 90, True, False, delay
     )
-    pick_sequence_bottles_3 = pick_and_stack_bottles(
-        (-0.95, -1.2 + 1, 1.945), (0.35, 0.85 + 1, 0.5), delay
+    pick_sequence_box2_3 = pick_and_stack_box(
+        (-1.85, -0.2, 0.644), (0.2, 1.325, 0.744), 90, True, False, delay
+    )
+    pick_sequence_box2_4 = pick_and_stack_box(
+        (-0.95, 0.2, 0.444), (-0.2, 1.325, 0.744), 90, False, False, delay
+    )
+    pick_sequence_box2_5 = pick_and_stack_box(
+        (-0.95, -0.2, 0.444), (-0.2, 1.025, 0.744), 90, False, False, delay
+    )
+    pick_sequence_box2_6 = pick_and_stack_box(
+        (-1.25, 0.2, 0.444), (0.2, 1.025, 0.744), 90, True, False, delay
+    )
+    pick_sequence_box2_7 = pick_and_stack_box(
+        (-1.25, -0.2, 0.444), (-0.2, 0.725, 0.744), 90, False, False, delay
+    )
+    pick_sequence_box2_8 = pick_and_stack_box(
+        (-1.55, 0.2, 0.444), (0.2, 0.725, 0.744), 90, True, False, delay
+    )
+    # Stack 2
+    pick_sequence_box2_9 = pick_and_stack_box(
+        (-1.25, 0.2, 2.644), (-0.2, 1.625, 0.944), 90, False, False, delay
+    )
+    pick_sequence_box2_10 = pick_and_stack_box(
+        (-1.25, -0.2, 2.644), (0.2, 1.625, 0.944), 90, True, False, delay
+    )
+    pick_sequence_box2_11 = pick_and_stack_box(
+        (-1.55, 0.2, 2.644), (0.2, 1.325, 0.944), 90, True, False, delay
+    )
+    pick_sequence_box2_12 = pick_and_stack_box(
+        (-1.55, -0.2, 2.644), (-0.2, 1.325, 0.944), 90, False, False, delay
+    )
+    pick_sequence_box2_13 = pick_and_stack_box(
+        (-1.85, 0.2, 2.644), (-0.2, 1.025, 0.944), 90, False, False, delay
+    )
+    pick_sequence_box2_14 = pick_and_stack_box(
+        (-1.85, -0.2, 2.644), (0.2, 1.025, 0.944), 90, True, False, delay
+    )
+    pick_sequence_box2_15 = pick_and_stack_box(
+        (-0.95, 0.2, 2.444), (-0.2, 0.725, 0.944), 90, False, False, delay
+    )
+    pick_sequence_box2_16 = pick_and_stack_box(
+        (-0.95, -0.2, 2.444), (0.2, 0.725, 0.944), 90, True, False, delay
+    )
+    #Stack 3
+    pick_sequence_box2_17 = pick_and_stack_box(
+        (-1.55, -1.1 + 1, 0.644), (-0.2, 1.625, 1.144), 90, False, False, delay
+    )
+    pick_sequence_box2_18 = pick_and_stack_box(
+        (-1.55, -0.7 + 1, 0.644), (0.2, 1.625, 1.144), 90, True, False, delay
+    )
+    pick_sequence_box2_19 = pick_and_stack_box(
+        (-1.85, -0.7 + 1, 0.644), (0.2, 1.325, 1.144), 90, True, False, delay
+    )
+    pick_sequence_box2_20 = pick_and_stack_box(
+        (-1.85, -1.1 + 1, 0.644), (-0.2, 1.325, 1.144), 90, False, False, delay
+    )
+    pick_sequence_box2_21 = pick_and_stack_box(
+        (-0.95, -1.1 + 1, 0.444), (-0.2, 1.025, 1.144), 90, False, False, delay
+    )
+    pick_sequence_box2_22 = pick_and_stack_box(
+        (-0.95, -0.7 + 1, 0.444), (0.2, 1.025, 1.144), 90, True, False, delay
+    )
+    pick_sequence_box2_23 = pick_and_stack_box(
+        (-1.25, -1.1 + 1, 0.444), (-0.2, 0.725, 1.144), 90, False, False, delay
+    )
+    pick_sequence_box2_24 = pick_and_stack_box(
+        (-1.25, -0.7 + 1, 0.444), (0.2, 0.725, 1.144), 90, True, False, delay
     )
 
-    full_sequence_box = (
-        pick_sequence_box_1
-        + pick_sequence_box_2
+    pick_sequence_bottles_1 = pick_and_stack_bottle(
+        (-0.95, 1.0 - 1, 0.145), (-0.3, 2.625 - 1, 0.644), 90, delay
+    )
+    pick_sequence_bottles_2 = pick_and_stack_bottle(
+        (-0.95, 0.8 - 1, 1.945), (0, 2.625 - 1, 0.644), 90, delay
+    )
+    pick_sequence_bottles_3 = pick_and_stack_bottle(
+        (-0.95, -1.2 + 1, 1.945), (0.3, 0.65 + 1, 0.644), 90, delay
+    )
+
+    small_sequence_box = (
+        pick_sequence_box1_1
+        + pick_sequence_box1_2
         + [
             {
                 "type": "command",
@@ -342,7 +438,148 @@ if __name__ == "__main__":
             }
         ]
         + [{"type": "command", "command": "tp_robot:0:-1:0", "delay": 1.0}]
-        + pick_sequence_box_3
+        + pick_sequence_box1_3
+        + [{"type": "command", "command": "wait", "delay": 1.0}]
+    )
+
+    big_sequence_box = (
+        pick_sequence_box2_1
+        + pick_sequence_box2_2
+        + pick_sequence_box2_3
+        + pick_sequence_box2_4
+        + pick_sequence_box2_5
+        + pick_sequence_box2_6
+        + pick_sequence_box2_7
+        + pick_sequence_box2_8
+        + pick_sequence_box2_9
+        + pick_sequence_box2_10
+        + pick_sequence_box2_11
+        + pick_sequence_box2_12
+        + pick_sequence_box2_13
+        + pick_sequence_box2_14
+        + pick_sequence_box2_15
+        + pick_sequence_box2_16
+        + [{"type": "command", "command": "tp_robot:0:-1:0", "delay": 1.0 / frequency}]
+        + [ # Nudge stack 1
+            {
+                "type": "command",
+                "command": "nudge_box:/World/Environment/stack1/box_1_19:0:-1:0",
+                "delay": 1.0 / frequency,
+            }
+        ]
+        + [
+            {
+                "type": "command",
+                "command": "nudge_box:/World/Environment/stack1/box_1_18:0:-1:0",
+                "delay": 1.0 / frequency,
+            }
+        ]
+        + [
+            {
+                "type": "command",
+                "command": "nudge_box:/World/Environment/stack1/box_1_17:0:-1:0",
+                "delay": 1.0 / frequency,
+            }
+        ]
+        + [
+            {
+                "type": "command",
+                "command": "nudge_box:/World/Environment/stack1/box_1_15:0:-1:0",
+                "delay": 1.0 / frequency,
+            }
+        ]
+        + [
+            {
+                "type": "command",
+                "command": "nudge_box:/World/Environment/stack1/box_1_16:0:-1:0",
+                "delay": 1.0 / frequency,
+            }
+        ]
+        + [
+            {
+                "type": "command",
+                "command": "nudge_box:/World/Environment/stack1/box_1_14:0:-1:0",
+                "delay": 1.0 / frequency,
+            }
+        ]
+        + [
+            {
+                "type": "command",
+                "command": "nudge_box:/World/Environment/stack1/box_1_13:0:-1:0",
+                "delay": 1.0 / frequency,
+            }
+        ]
+        + [
+            {
+                "type": "command",
+                "command": "nudge_box:/World/Environment/stack1/box_1_12:0:-1:0",
+                "delay": 1.0 / frequency,
+            }
+        ]
+        + [ # Nudge stack 2
+            {
+                "type": "command",
+                "command": "nudge_box:/World/Environment/stack4/box_4_24:0:-1:0",
+                "delay": 1.0 / frequency,
+            }
+        ]
+        + [
+            {
+                "type": "command",
+                "command": "nudge_box:/World/Environment/stack4/box_4_23:0:-1:0",
+                "delay": 1.0 / frequency,
+            }
+        ]
+        + [
+            {
+                "type": "command",
+                "command": "nudge_box:/World/Environment/stack4/box_4_29:0:-1:0",
+                "delay": 1.0 / frequency,
+            }
+        ]
+        + [
+            {
+                "type": "command",
+                "command": "nudge_box:/World/Environment/stack4/box_4_30:0:-1:0",
+                "delay": 1.0 / frequency,
+            }
+        ]
+        + [
+            {
+                "type": "command",
+                "command": "nudge_box:/World/Environment/stack4/box_4_28:0:-1:0",
+                "delay": 1.0 / frequency,
+            }
+        ]
+        + [
+            {
+                "type": "command",
+                "command": "nudge_box:/World/Environment/stack4/box_4_27:0:-1:0",
+                "delay": 1.0 / frequency,
+            }
+        ]
+        + [
+            {
+                "type": "command",
+                "command": "nudge_box:/World/Environment/stack4/box_4_26:0:-1:0",
+                "delay": 1.0 / frequency,
+            }
+        ]
+        + [
+            {
+                "type": "command",
+                "command": "nudge_box:/World/Environment/stack4/box_4_25:0:-1:0",
+                "delay": 1.0 / frequency,
+            }
+        ]
+        + pick_sequence_box2_17
+        + pick_sequence_box2_18
+        + pick_sequence_box2_19
+        + pick_sequence_box2_20
+        + pick_sequence_box2_21
+        + pick_sequence_box2_22
+        + pick_sequence_box2_23
+        + pick_sequence_box2_24
         + [{"type": "command", "command": "wait", "delay": 1.0}]
     )
 
@@ -370,23 +607,23 @@ if __name__ == "__main__":
     )
 
     all_command_sets, final_axes = process_sequence(
-        full_sequence_bottles, current_axes, frequency
+        big_sequence_box, current_axes, frequency
     )
 
     start_time = time.time()
 
-    udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    send_udp_command(udp_socket, "start_overview_camera", "127.0.0.1", 9999)
-    udp_socket.close()
+    # udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    # send_udp_command(udp_socket, "start_overview_camera:1", "127.0.0.1", 9999)
+    # udp_socket.close()
 
     send_command_sets_at_rate(all_command_sets, frequency=frequency)
 
     end_time = time.time()
     execution_time = end_time - start_time
 
-    udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    send_udp_command(udp_socket, "stop_overview_camera", "127.0.0.1", 9999)
-    udp_socket.close()
+    # udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    # send_udp_command(udp_socket, "stop_overview_camera", "127.0.0.1", 9999)
+    # udp_socket.close()
 
     print(f"Total execution time: {execution_time:.2f} seconds")
     print("Program done.")
