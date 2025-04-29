@@ -97,12 +97,16 @@ def process_sequence(sequence, current_axes, frequency):
             print("Unknown step type:", step["type"])
     return all_command_sets, current_axes
 
+
 def add_safety_margin(original_number, positive=True):
     margin = 0.025 if positive else -0.025
 
     return original_number + margin
 
-def pick_and_stack_box(box_position, stack_position, stack_rotation, safety_x, safety_y, delay):
+
+def pick_and_stack_box(
+    box_position, stack_position, stack_rotation, safety_x, safety_y, delay
+):
     sequence = [
         {
             "type": "command",
@@ -161,7 +165,11 @@ def pick_and_stack_box(box_position, stack_position, stack_rotation, safety_x, s
         },  # Raise axis2
         {
             "type": "move",
-            "target": (add_safety_margin(stack_position[0], safety_x), add_safety_margin(stack_position[1], safety_y), stack_position[2] + 0.3),
+            "target": (
+                add_safety_margin(stack_position[0], safety_x),
+                add_safety_margin(stack_position[1], safety_y),
+                stack_position[2] + 0.3,
+            ),
             "duration": 4.0 / delay,
             "rotation": stack_rotation,
         },  # Move towards stack position
@@ -171,6 +179,11 @@ def pick_and_stack_box(box_position, stack_position, stack_rotation, safety_x, s
             "duration": 1.0 / delay,
             "rotation": stack_rotation,
         },  # Lower axis2
+        {
+            "type": "command",
+            "command": "add_colliding_item",
+            "delay": 1.0 / frequency,
+        },  # Add item to robots pallet prim
         {
             "type": "command",
             "command": "open_gripper",
@@ -283,10 +296,19 @@ def pick_and_stack_bottle(bottles_position, stack_position, stack_rotation, dela
         },  # Move towards stack position
         {
             "type": "move",
-            "target": (stack_position[0], stack_position[1], stack_position[2] + 0.1375),
+            "target": (
+                stack_position[0],
+                stack_position[1],
+                stack_position[2] + 0.1375,
+            ),
             "duration": 1.0 / delay,
             "rotation": stack_rotation,
         },  # Lower axis2
+        {
+            "type": "command",
+            "command": "add_colliding_item",
+            "delay": 1.0 / frequency,
+        },  # Add item to robots pallet prim
         {
             "type": "command",
             "command": "open_gripper",
@@ -322,7 +344,7 @@ if __name__ == "__main__":
     delay = 1
 
     current_axes = (0, 0, 0, 0)
-    
+
     pick_sequence_box1_1 = pick_and_stack_box(
         (-1.55, -0.2, 0.644), (-0.2, 1.625, 0.744), 90, False, False, delay
     )
@@ -332,7 +354,6 @@ if __name__ == "__main__":
     pick_sequence_box1_3 = pick_and_stack_box(
         (-1.55, -1.1 + 1, 0.644), (0.2, 0.325 + 1, 0.744), 90, True, False, delay
     )  # Plus 1 to the y axis because we teleport the robot
-
 
     # Stack 1
     pick_sequence_box2_1 = pick_and_stack_box(
@@ -384,7 +405,7 @@ if __name__ == "__main__":
     pick_sequence_box2_16 = pick_and_stack_box(
         (-0.95, -0.2, 2.444), (0.2, 0.725, 0.944), 90, True, False, delay
     )
-    #Stack 3
+    # Stack 3
     pick_sequence_box2_17 = pick_and_stack_box(
         (-1.55, -1.1 + 1, 0.644), (-0.2, 1.625, 1.144), 90, False, False, delay
     )
@@ -423,20 +444,6 @@ if __name__ == "__main__":
     small_sequence_box = (
         pick_sequence_box1_1
         + pick_sequence_box1_2
-        + [
-            {
-                "type": "command",
-                "command": "nudge_box:/World/Environment/stack1/box_1_19:0:-1:0",
-                "delay": 1.0 / frequency,
-            }
-        ]
-        + [
-            {
-                "type": "command",
-                "command": "nudge_box:/World/Environment/stack4/box_4_30:0:-1:0",
-                "delay": 1.0 / frequency,
-            }
-        ]
         + [{"type": "command", "command": "tp_robot:0:-1:0", "delay": 1.0}]
         + pick_sequence_box1_3
         + [{"type": "command", "command": "wait", "delay": 1.0}]
@@ -460,118 +467,6 @@ if __name__ == "__main__":
         + pick_sequence_box2_15
         + pick_sequence_box2_16
         + [{"type": "command", "command": "tp_robot:0:-1:0", "delay": 1.0 / frequency}]
-        + [ # Nudge stack 1
-            {
-                "type": "command",
-                "command": "nudge_box:/World/Environment/stack1/box_1_19:0:-1:0",
-                "delay": 1.0 / frequency,
-            }
-        ]
-        + [
-            {
-                "type": "command",
-                "command": "nudge_box:/World/Environment/stack1/box_1_18:0:-1:0",
-                "delay": 1.0 / frequency,
-            }
-        ]
-        + [
-            {
-                "type": "command",
-                "command": "nudge_box:/World/Environment/stack1/box_1_17:0:-1:0",
-                "delay": 1.0 / frequency,
-            }
-        ]
-        + [
-            {
-                "type": "command",
-                "command": "nudge_box:/World/Environment/stack1/box_1_15:0:-1:0",
-                "delay": 1.0 / frequency,
-            }
-        ]
-        + [
-            {
-                "type": "command",
-                "command": "nudge_box:/World/Environment/stack1/box_1_16:0:-1:0",
-                "delay": 1.0 / frequency,
-            }
-        ]
-        + [
-            {
-                "type": "command",
-                "command": "nudge_box:/World/Environment/stack1/box_1_14:0:-1:0",
-                "delay": 1.0 / frequency,
-            }
-        ]
-        + [
-            {
-                "type": "command",
-                "command": "nudge_box:/World/Environment/stack1/box_1_13:0:-1:0",
-                "delay": 1.0 / frequency,
-            }
-        ]
-        + [
-            {
-                "type": "command",
-                "command": "nudge_box:/World/Environment/stack1/box_1_12:0:-1:0",
-                "delay": 1.0 / frequency,
-            }
-        ]
-        + [ # Nudge stack 2
-            {
-                "type": "command",
-                "command": "nudge_box:/World/Environment/stack4/box_4_24:0:-1:0",
-                "delay": 1.0 / frequency,
-            }
-        ]
-        + [
-            {
-                "type": "command",
-                "command": "nudge_box:/World/Environment/stack4/box_4_23:0:-1:0",
-                "delay": 1.0 / frequency,
-            }
-        ]
-        + [
-            {
-                "type": "command",
-                "command": "nudge_box:/World/Environment/stack4/box_4_29:0:-1:0",
-                "delay": 1.0 / frequency,
-            }
-        ]
-        + [
-            {
-                "type": "command",
-                "command": "nudge_box:/World/Environment/stack4/box_4_30:0:-1:0",
-                "delay": 1.0 / frequency,
-            }
-        ]
-        + [
-            {
-                "type": "command",
-                "command": "nudge_box:/World/Environment/stack4/box_4_28:0:-1:0",
-                "delay": 1.0 / frequency,
-            }
-        ]
-        + [
-            {
-                "type": "command",
-                "command": "nudge_box:/World/Environment/stack4/box_4_27:0:-1:0",
-                "delay": 1.0 / frequency,
-            }
-        ]
-        + [
-            {
-                "type": "command",
-                "command": "nudge_box:/World/Environment/stack4/box_4_26:0:-1:0",
-                "delay": 1.0 / frequency,
-            }
-        ]
-        + [
-            {
-                "type": "command",
-                "command": "nudge_box:/World/Environment/stack4/box_4_25:0:-1:0",
-                "delay": 1.0 / frequency,
-            }
-        ]
         + pick_sequence_box2_17
         + pick_sequence_box2_18
         + pick_sequence_box2_19
@@ -583,31 +478,17 @@ if __name__ == "__main__":
         + [{"type": "command", "command": "wait", "delay": 1.0}]
     )
 
-    full_sequence_bottles = (
+    small_sequence_bottles = (
         [{"type": "command", "command": "tp_robot:0:1:0", "delay": 1.0}]
         + pick_sequence_bottles_1
         + pick_sequence_bottles_2
-        + [
-            {
-                "type": "command",
-                "command": "nudge_box:/World/Environment/stack3/stack3/box_3_14:0:-2:0",
-                "delay": 1.0 / frequency,
-            }
-        ]
-        + [
-            {
-                "type": "command",
-                "command": "nudge_box:/World/Environment/stack6/stack6/box_6_15:0:-2:0",
-                "delay": 1.0 / frequency,
-            }
-        ]
         + [{"type": "command", "command": "tp_robot:0:-1:0", "delay": 1.0}]
         + pick_sequence_bottles_3
         + [{"type": "command", "command": "wait", "delay": 1.0}]
     )
 
     all_command_sets, final_axes = process_sequence(
-        big_sequence_box, current_axes, frequency
+        small_sequence_box, current_axes, frequency
     )
 
     start_time = time.time()
